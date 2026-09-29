@@ -1,0 +1,18 @@
+# Don't upload dependencies
+node_modules/
+
+# Don't upload environment/API keys
+.env
+.env.*
+
+# Python files
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Frontend build
+dist/
+
+# VS Code
+.vscode/

@@ -1,10 +1,20 @@
+import HealthReminders from "./pages/HealthReminders";
+import WearableHealth from "./pages/WearableHealth";
+import HealthLocker from "./pages/HealthLocker";
+import EmergencyHelp from "./pages/EmergencyHelp";
+import SymptomChecker from "./pages/SymptomChecker";
 import HealthCard from "./pages/HealthCard";
 import PriceComparison from "./pages/PriceComparison";
 import HospitalFinder from "./pages/HospitalFinder";
 import TestDetails from "./pages/TestDetails";
 import DiseaseDetails from "./pages/DiseaseDetails";
+import { diseaseData } from "./data/diseases";
+import { testData } from "./data/medicalTests";
 import { useLocation, useNavigate } from "react-router-dom";
 import Diseases from "./pages/Diseases";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import AllTests from "./pages/AllTests";
 import {
   Activity,
   ArrowRight,
@@ -23,7 +33,7 @@ import {
   TestTube2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const features = [
   {
@@ -67,6 +77,12 @@ const features = [
     description:
       "Create reminders for medicines, appointments, tests, vaccinations and follow-ups.",
     icon: CalendarClock,
+  },
+  {
+    title: "Wearable Health",
+    description:
+      "Track smartwatch and wearable health data such as heart rate, steps, sleep, SpO₂ and activity.",
+    icon: Activity,
   },
   {
     title: "Emergency Help",
@@ -120,22 +136,173 @@ const commonConditions = [
   "Dengue",
 ];
 
-function App() { 
+function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [backendMessage, setBackendMessage] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useEffect(() => {
+  fetch("http://127.0.0.1:5000/")
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("TrueTest backend:", data);
+      setBackendMessage(data.message);
+    })
+    .catch((error) => {
+      console.error("Backend connection error:", error);
+    });
+}, []);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
 
-  const handleSearch = () => {
-    const value = searchText.trim();
+  const normalizedSearch = searchText.trim().toLowerCase();
 
-    if (!value) {
-      alert("Please enter a disease or medical test.");
+  const searchSuggestions = normalizedSearch
+    ? [
+        ...Object.entries(diseaseData)
+          .filter(
+            ([slug, disease]) =>
+              slug.toLowerCase().includes(normalizedSearch) ||
+              disease.name.toLowerCase().includes(normalizedSearch)
+          )
+          .map(([slug, disease]) => ({
+            type: "Disease" as const,
+            name: disease.name,
+            slug,
+          })),
+        ...Object.entries(testData)
+          .filter(([slug, test]) => {
+            const aliases =
+              slug === "complete-blood-count"
+                ? ["cbc"]
+                : slug === "fasting-blood-sugar"
+                ? ["fbs"]
+                : [];
+
+            return (
+              slug.toLowerCase().includes(normalizedSearch) ||
+              test.name.toLowerCase().includes(normalizedSearch) ||
+              aliases.some((alias) => alias.includes(normalizedSearch))
+            );
+          })
+          .map(([slug, test]) => ({
+            type: "Test" as const,
+            name: test.name,
+            slug,
+          })),
+      ].slice(0, 8)
+    : [];
+
+  const openSuggestion = (
+    suggestion: (typeof searchSuggestions)[number]
+  ) => {
+    setSearchText(suggestion.name);
+    setSearchFocused(false);
+
+    if (suggestion.type === "Disease") {
+      navigate(`/disease-details/${suggestion.slug}`);
       return;
     }
 
-    alert(`Search feature will be connected next for: ${value}`);
+    navigate(`/test-details/${suggestion.slug}`);
+  };
+
+const handleSearch = () => {
+  const value = searchText.trim().toLowerCase();
+
+  if (!value) {
+    alert("Please enter a disease or medical test.");
+    return;
+  }
+
+  const diseaseMatch = Object.entries(diseaseData).find(
+    ([slug, disease]) =>
+      slug.toLowerCase().includes(value) ||
+      disease.name.toLowerCase().includes(value)
+  );
+
+  if (diseaseMatch) {
+    const [slug] = diseaseMatch;
+    navigate(`/disease-details/${slug}`);
+    return;
+  }
+
+  const testMatch = Object.entries(testData).find(
+    ([slug, test]) => {
+      const name = test.name.toLowerCase();
+
+      const aliases =
+        slug === "complete-blood-count"
+          ? ["cbc"]
+          : slug === "fasting-blood-sugar"
+          ? ["fbs"]
+          : [];
+
+      return (
+        slug.toLowerCase().includes(value) ||
+        name.includes(value) ||
+        aliases.some((alias) => alias.includes(value))
+      );
+    }
+  );
+
+  if (testMatch) {
+    const [slug] = testMatch;
+    navigate(`/test-details/${slug}`);
+    return;
+  }
+
+  alert("No matching disease or medical test found.");
+};
+
+  const handleFeatureClick = (title: string) => {
+    if (title === "Disease Information") {
+      navigate("/diseases");
+      return;
+    }
+
+    if (title === "Compare Test Prices") {
+      navigate("/price-comparison");
+      return;
+    }
+
+    if (title === "Hospital Finder") {
+      navigate("/hospital-finder");
+      return;
+    }
+
+    if (title === "Health Card") {
+      navigate("/health-card");
+      return;
+    }
+    if (title === "Symptom Guidance") {
+  navigate("/symptom-checker");
+  return;
+}
+if (title === "Emergency Help") {
+  navigate("/emergency-help");
+  return;
+}
+if (title === "Health Locker") {
+  navigate("/health-locker");
+  return;
+}
+if (title === "Health Reminders") {
+  navigate("/health-reminders");
+  return;
+}
+if (title === "Wearable Health") {
+  navigate("/wearable-health");
+  return;
+}
+    if (title === "Medical Tests") {
+      navigate("/tests");
+      return;
+    }
+
+    alert(`${title} feature will be connected next.`);
   };
   if (location.pathname === "/hospital-finder") {
   return <HospitalFinder />;
@@ -152,9 +319,34 @@ if (location.pathname.startsWith("/disease-details/")) {
 if (location.pathname === "/diseases") {
   return <Diseases />;
 }
+if (location.pathname === "/tests") {
+  return <AllTests />;
+}
 
 if (location.pathname === "/health-card") {
   return <HealthCard />;
+}
+if (location.pathname === "/symptom-checker") {
+  return <SymptomChecker />;
+}
+
+if (location.pathname === "/emergency-help") {
+  return <EmergencyHelp />;
+}
+if (location.pathname === "/health-locker") {
+  return <HealthLocker />;
+}
+if (location.pathname === "/health-reminders") {
+  return <HealthReminders />;
+}
+if (location.pathname === "/wearable-health") {
+  return <WearableHealth />;
+}
+if (location.pathname === "/login") {
+  return <Login />;
+}
+if (location.pathname === "/signup") {
+  return <Signup />;
 }
   return (
     <div className="min-h-screen bg-[#f8fbf8] text-slate-800">
@@ -211,18 +403,58 @@ if (location.pathname === "/health-card") {
 >
   Diseases
 </button>
-            <button className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-[#315c47]">
-              More
-              <ChevronDown size={16} />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMoreMenuOpen((current) => !current)}
+                className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-[#315c47]"
+              >
+                More
+                <ChevronDown size={16} />
+              </button>
+
+              {moreMenuOpen && (
+                <div className="absolute right-0 top-full z-50 mt-3 w-56 overflow-hidden rounded-2xl border border-emerald-100 bg-white py-2 shadow-xl">
+                  {[
+                    ["Hospital Finder", "/hospital-finder"],
+                    ["Symptom Guidance", "/symptom-checker"],
+                    ["Health Card", "/health-card"],
+                    ["Health Locker", "/health-locker"],
+                    ["Health Reminders", "/health-reminders"],
+                    ["Wearable Health", "/wearable-health"],
+                    ["Emergency Help", "/emergency-help"],
+                  ].map(([label, path]) => (
+                    <button
+                      key={path}
+                      type="button"
+                      onClick={() => {
+                        setMoreMenuOpen(false);
+                        navigate(path);
+                      }}
+                      className="block w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-[#f1f7f1] hover:text-[#315c47]"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="hidden items-center gap-3 lg:flex">
-            <button className="rounded-xl border border-[#6f8f72] px-5 py-2.5 text-sm font-semibold text-[#315c47] transition hover:bg-emerald-50">
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="rounded-xl border border-[#6f8f72] px-5 py-2.5 text-sm font-semibold text-[#315c47] transition hover:bg-emerald-50"
+            >
               Log in
             </button>
 
-            <button className="rounded-xl bg-[#5f7f65] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4d6d54]">
+            <button
+              type="button"
+              onClick={() => navigate("/signup")}
+              className="rounded-xl bg-[#5f7f65] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4d6d54]"
+            >
               Create account
             </button>
           </div>
@@ -249,15 +481,56 @@ if (location.pathname === "/health-card") {
               <a href="#tests" className="text-slate-700">
                 Medical Tests
               </a>
-              <a href="#conditions" className="text-slate-700">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate("/diseases");
+                }}
+                className="text-left text-slate-700"
+              >
                 Diseases
-              </a>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate("/hospital-finder");
+                }}
+                className="text-left text-slate-700"
+              >
+                Hospital Finder
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate("/emergency-help");
+                }}
+                className="text-left text-slate-700"
+              >
+                Emergency Help
+              </button>
 
               <div className="mt-2 grid grid-cols-2 gap-3">
-                <button className="rounded-xl border border-[#6f8f72] py-2.5 font-semibold text-[#315c47]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/login");
+                  }}
+                  className="rounded-xl border border-[#6f8f72] py-2.5 font-semibold text-[#315c47]"
+                >
                   Log in
                 </button>
-                <button className="rounded-xl bg-[#5f7f65] py-2.5 font-semibold text-white">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/signup");
+                  }}
+                  className="rounded-xl bg-[#5f7f65] py-2.5 font-semibold text-white"
+                >
                   Sign up
                 </button>
               </div>
@@ -295,43 +568,114 @@ if (location.pathname === "/health-card") {
                 one simple platform.
               </p>
 
-              <div className="mt-8 max-w-2xl rounded-2xl border border-emerald-100 bg-white p-2 shadow-lg shadow-emerald-900/5">
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <div className="flex flex-1 items-center gap-3 px-3">
-                    <Search className="shrink-0 text-[#6f8f72]" size={22} />
-                    <input
-                      type="text"
-                      value={searchText}
-                      onChange={(event) => setSearchText(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          handleSearch();
-                        }
-                      }}
-                      placeholder="Search a disease or medical test"
-                      className="w-full bg-transparent py-3 text-base outline-none placeholder:text-slate-400"
-                    />
-                  </div>
+              <div className="relative mt-8 max-w-2xl">
+                <div className="rounded-2xl border border-emerald-100 bg-white p-2 shadow-lg shadow-emerald-900/5">
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="flex flex-1 items-center gap-3 px-3">
+                      <Search className="shrink-0 text-[#6f8f72]" size={22} />
+                      <input
+                        type="text"
+                        value={searchText}
+                        onFocus={() => setSearchFocused(true)}
+                        onBlur={() => {
+                          window.setTimeout(() => setSearchFocused(false), 150);
+                        }}
+                        onChange={(event) => {
+                          setSearchText(event.target.value);
+                          setSearchFocused(true);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            handleSearch();
+                            setSearchFocused(false);
+                          }
 
-                  <button
-                    type="button"
-                    onClick={handleSearch}
-                    className="rounded-xl bg-[#58775e] px-7 py-3.5 font-semibold text-white transition hover:bg-[#46654d]"
-                  >
-                    Search
-                  </button>
+                          if (event.key === "Escape") {
+                            setSearchFocused(false);
+                          }
+                        }}
+                        placeholder="Search a disease or medical test"
+                        autoComplete="off"
+                        className="w-full bg-transparent py-3 text-base outline-none placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSearch();
+                        setSearchFocused(false);
+                      }}
+                      className="rounded-xl bg-[#58775e] px-7 py-3.5 font-semibold text-white transition hover:bg-[#46654d]"
+                    >
+                      Search
+                    </button>
+                  </div>
                 </div>
+
+                {searchFocused && normalizedSearch && (
+                  <div className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-xl shadow-emerald-900/10">
+                    {searchSuggestions.length > 0 ? (
+                      <div className="max-h-80 overflow-y-auto py-2">
+                        {searchSuggestions.map((suggestion) => (
+                          <button
+                            key={`${suggestion.type}-${suggestion.slug}`}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => openSuggestion(suggestion)}
+                            className="flex w-full items-center justify-between gap-4 px-5 py-3 text-left transition hover:bg-[#f1f7f1]"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf5ef] text-[#58775e]">
+                                {suggestion.type === "Disease" ? (
+                                  <Stethoscope size={18} />
+                                ) : (
+                                  <TestTube2 size={18} />
+                                )}
+                              </div>
+
+                              <div>
+                                <p className="font-semibold text-[#294b3c]">
+                                  {suggestion.name}
+                                </p>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                  {suggestion.type}
+                                </p>
+                              </div>
+                            </div>
+
+                            <ArrowRight
+                              size={17}
+                              className="shrink-0 text-[#6f8f72]"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-5 py-4 text-sm text-slate-500">
+                        No matching disease or medical test found.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="mt-7 flex flex-wrap gap-3">
-                <button className="flex items-center gap-2 rounded-xl bg-[#315c47] px-6 py-3.5 font-semibold text-white transition hover:bg-[#274c3b]">
-                  Check symptoms
-                  <ArrowRight size={18} />
-                </button>
-
-                <button className="rounded-xl border border-[#6f8f72] bg-white px-6 py-3.5 font-semibold text-[#315c47] transition hover:bg-emerald-50">
-                  Compare test prices
-                </button>
+               <button
+  type="button"
+  onClick={() => navigate("/symptom-checker")}
+  className="flex items-center gap-2 rounded-xl bg-[#315c47] px-6 py-3.5 font-semibold text-white transition hover:bg-[#274c3b]"
+>
+  Check symptoms
+  <ArrowRight size={18} />
+</button>
+                <button
+  type="button"
+  onClick={() => navigate("/price-comparison")}
+  className="rounded-xl border border-[#6f8f72] bg-white px-6 py-3.5 font-semibold text-[#315c47] transition hover:bg-emerald-50"
+>
+  Compare test prices
+</button>
               </div>
 
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600">
@@ -379,9 +723,25 @@ if (location.pathname === "/health-card") {
 
                       return (
                         <button
-                          key={label as string}
-                          className="rounded-2xl bg-white/12 p-4 text-left transition hover:bg-white/20"
-                        >
+  key={label as string}
+  onClick={() => {
+    if (label === "Explore diseases") {
+      navigate("/diseases");
+    } else if (label === "Understand tests") {
+  document
+    .getElementById("tests")
+    ?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    } else if (label === "Find hospitals") {
+      navigate("/hospital-finder");
+    } else if (label === "Emergency help") {
+      navigate("/emergency-help");
+    }
+  }}
+  className="rounded-2xl bg-white/12 p-4 text-left transition hover:bg-white/20"
+>
                           <CardIcon size={22} />
                           <p className="mt-3 text-sm font-semibold">
                             {label as string}
@@ -394,14 +754,14 @@ if (location.pathname === "/health-card") {
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-3">
                   <div className="rounded-2xl bg-[#eff6ef] p-4">
-                    <p className="text-2xl font-bold text-[#315c47]">50+</p>
+                    <p className="text-2xl font-bold text-[#315c47]">{Object.keys(diseaseData).length}</p>
                     <p className="mt-1 text-sm text-slate-600">
                       Disease records
                     </p>
                   </div>
 
                   <div className="rounded-2xl bg-[#edf5f3] p-4">
-                    <p className="text-2xl font-bold text-[#315c47]">40+</p>
+                    <p className="text-2xl font-bold text-[#315c47]">{Object.keys(testData).length}</p>
                     <p className="mt-1 text-sm text-slate-600">Medical tests</p>
                   </div>
 
@@ -451,7 +811,11 @@ if (location.pathname === "/health-card") {
                     {feature.description}
                   </p>
 
-                  <button className="mt-5 flex items-center gap-2 text-sm font-semibold text-[#58775e]">
+                  <button
+                    type="button"
+                    onClick={() => handleFeatureClick(feature.title)}
+                    className="mt-5 flex items-center gap-2 text-sm font-semibold text-[#58775e]"
+                  >
                     Explore
                     <ArrowRight
                       size={16}
@@ -481,7 +845,11 @@ if (location.pathname === "/health-card") {
                 </p>
               </div>
 
-              <button className="flex items-center gap-2 font-semibold text-[#315c47]">
+              <button
+                type="button"
+                onClick={() => navigate("/tests")}
+                className="flex items-center gap-2 font-semibold text-[#315c47]"
+              >
                 View all tests
                 <ArrowRight size={18} />
               </button>
@@ -510,7 +878,7 @@ if (location.pathname === "/health-card") {
 
                   <div className="mt-5 border-t border-slate-100 pt-4">
                     <p className="text-xs text-slate-500">
-                      Estimated demo price
+                      Estimated price
                     </p>
                     <p className="mt-1 font-bold text-[#315c47]">{test.price}</p>
                   </div>
@@ -544,7 +912,11 @@ if (location.pathname === "/health-card") {
                   supported by clearly structured educational content.
                 </p>
 
-                <button className="mt-7 flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-[#274c3b]">
+                <button
+                  type="button"
+                  onClick={() => navigate("/diseases")}
+                  className="mt-7 flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-[#274c3b]"
+                >
                   Browse diseases
                   <ArrowRight size={18} />
                 </button>
@@ -554,6 +926,21 @@ if (location.pathname === "/health-card") {
                 {commonConditions.map((condition) => (
                   <button
                     key={condition}
+                    type="button"
+                    onClick={() => {
+                      const value = condition.toLowerCase();
+                      const match = Object.entries(diseaseData).find(
+                        ([slug, disease]) =>
+                          slug.toLowerCase().includes(value) ||
+                          disease.name.toLowerCase().includes(value)
+                      );
+
+                      if (match) {
+                        navigate(`/disease-details/${match[0]}`);
+                      } else {
+                        navigate("/diseases");
+                      }
+                    }}
                     className="rounded-2xl border border-white/15 bg-white/10 px-4 py-5 text-left font-semibold transition hover:bg-white/20"
                   >
                     {condition}
@@ -621,9 +1008,27 @@ if (location.pathname === "/health-card") {
             <h3 className="font-bold">Quick links</h3>
             <div className="mt-4 flex flex-col gap-3 text-sm text-emerald-50/70">
               <a href="#features">Services</a>
-              <a href="#tests">Medical Tests</a>
-              <a href="#conditions">Diseases</a>
-              <a href="#">Hospital Finder</a>
+              <button
+                type="button"
+                onClick={() => navigate("/tests")}
+                className="text-left"
+              >
+                Medical Tests
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/diseases")}
+                className="text-left"
+              >
+                Diseases
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/hospital-finder")}
+                className="text-left"
+              >
+                Hospital Finder
+              </button>
             </div>
           </div>
 

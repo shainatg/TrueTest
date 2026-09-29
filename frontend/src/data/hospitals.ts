@@ -9,6 +9,11 @@ export const hospitals = [
     emergency: true,
     phone: "+91 90000 11111",
     address: "Road No. 12, Banjara Hills, Hyderabad",
+    specialties: [
+  "General Medicine",
+  "Cardiology",
+  "Endocrinology",
+],
     tests: [
       { name: "HbA1c", price: 720 },
       { name: "Fasting Blood Sugar", price: 180 },
@@ -30,6 +35,10 @@ export const hospitals = [
     emergency: false,
     phone: "+91 90000 22222",
     address: "HITEC City Road, Madhapur, Hyderabad",
+    specialties: [
+  "General Medicine",
+  "Endocrinology",
+],
     tests: [
       { name: "HbA1c", price: 620 },
       { name: "Fasting Blood Sugar", price: 150 },
@@ -51,6 +60,14 @@ export const hospitals = [
     emergency: true,
     phone: "+91 90000 33333",
     address: "Central Road, Abids, Hyderabad",
+    specialties: [
+  "General Medicine",
+  "Cardiology",
+  "Pulmonology",
+  "Endocrinology",
+  "Neurology",
+  "Emergency Medicine",
+],
     tests: [
       { name: "HbA1c", price: 300 },
       { name: "Fasting Blood Sugar", price: 80 },
@@ -72,6 +89,11 @@ export const hospitals = [
     emergency: false,
     phone: "+91 90000 44444",
     address: "KPHB Main Road, Kukatpally, Hyderabad",
+    specialties: [
+  "Cardiology",
+  "Endocrinology",
+],
+
     tests: [
       { name: "HbA1c", price: 680 },
       { name: "Fasting Blood Sugar", price: 170 },
@@ -92,6 +114,10 @@ export const hospitals = [
     emergency: false,
     phone: "+91 90000 55555",
     address: "Jubilee Hills Check Post, Hyderabad",
+    specialties: [
+  "Gynecology",
+  "Obstetrics",
+],
     tests: [
       { name: "Pelvic Ultrasound", price: 1400 },
       { name: "Hormone Tests", price: 1800 },
@@ -111,6 +137,11 @@ export const hospitals = [
     emergency: false,
     phone: "+91 90000 66666",
     address: "SD Road, Secunderabad",
+    specialties: [
+  "Cardiology",
+  "Endocrinology",
+],
+
     tests: [
       { name: "MRI Brain", price: 5200 },
       { name: "CT Brain", price: 2800 },
@@ -130,6 +161,12 @@ export const hospitals = [
     emergency: true,
     phone: "+91 90000 77777",
     address: "100 Feet Road, Indiranagar, Bengaluru",
+    specialties: [
+  "General Medicine",
+  "Cardiology",
+  "Neurology",
+  "Emergency Medicine",
+],
     tests: [
       { name: "HbA1c", price: 760 },
       { name: "Complete Blood Count", price: 480 },
@@ -150,6 +187,11 @@ export const hospitals = [
     emergency: false,
     phone: "+91 90000 88888",
     address: "ITPL Main Road, Whitefield, Bengaluru",
+    specialties: [
+  "General Medicine",
+  "Endocrinology",
+],
+
     tests: [
       { name: "HbA1c", price: 640 },
       { name: "TSH", price: 500 },
@@ -169,6 +211,12 @@ export const hospitals = [
     emergency: true,
     phone: "+91 90000 99999",
     address: "2nd Avenue, Anna Nagar, Chennai",
+    specialties: [
+  "General Medicine",
+  "Cardiology",
+  "Pulmonology",
+  "Emergency Medicine",
+],
     tests: [
       { name: "HbA1c", price: 700 },
       { name: "ECG", price: 480 },
@@ -188,6 +236,10 @@ export const hospitals = [
     emergency: false,
     phone: "+91 90111 11111",
     address: "North Usman Road, T Nagar, Chennai",
+    specialties: [
+  "General Medicine",
+  "Endocrinology",
+],
     tests: [
       { name: "Complete Blood Count", price: 380 },
       { name: "Serum Ferritin", price: 720 },
